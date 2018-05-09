@@ -216,13 +216,13 @@ public class CardController : MonoBehaviour
         switch (_effect.CardTier)
         {
             case CardTier.Tier1:
-                m_border.materials[0] = m_tier1;
+                m_border.material = m_tier1;
                 break;
             case CardTier.Tier2:
-                m_border.materials[0] = m_tier2;
+                m_border.material = m_tier2;
                 break;
             case CardTier.Tier3:
-                m_border.materials[0] = m_tier3;
+                m_border.material = m_tier3;
                 break;
         }
     }

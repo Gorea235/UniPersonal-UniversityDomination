@@ -22,29 +22,17 @@ namespace EffectImpl
 
         public override EffectAvailableSelection AvailableSelection(Game game) => new EffectAvailableSelection
         {
-            Players = game.Players.Where(p => p != game.CurrentPlayer)
+            Players = game.Players.Where(p => p != game.CurrentPlayer && !p.SkipNextTurn)
         };
-
-        #endregion
-
-        #region Handlers
-
-        public override void ProcessPlayerTurnStart(object sender, EventArgs e)
-        {
-            // if the applied player's turn starts, end it and remove
-            if ((Player)sender == AppliedPlayer)
-            {
-                AppliedPlayer.EndTurn();
-                RemoveSelf();
-            }
-        }
-
+        
         #endregion
 
         #region Helper Methods
 
         protected override void ApplyToPlayer()
-        { }
+        {
+			AppliedPlayer.SkipNextTurn = true;
+		}
 
         #endregion
     }

@@ -22,6 +22,7 @@ public abstract class Player : MonoBehaviour
     CardManager _cardManager;
     int _actionsPerformed;
     bool _hasHadTurn;
+	bool _skipNextTurn;
 
     #endregion
 
@@ -101,6 +102,15 @@ public abstract class Player : MonoBehaviour
     /// Whether the player has had at least 1 turn.
     /// </summary>
     public bool HasHadTurn => _hasHadTurn;
+
+    /// <summary>
+    /// Whether the player should skip their next turn.
+    /// </summary>
+    public bool SkipNextTurn
+	{
+		get { return _skipNextTurn; }
+		set { _skipNextTurn = value; }
+	}
 
     #endregion
 
@@ -182,15 +192,16 @@ public abstract class Player : MonoBehaviour
 
     public virtual SerializablePlayer CreateMemento()
     {
-        return new SerializablePlayer
-        {
-            kind = Kind,
-            id = _id,
-            color = _color,
-            effectManager = _effects.CreateMemento(),
-            cards = _cardManager.CreateMemento(),
-            actionsPerformed = _actionsPerformed,
-            hasHadTurn = _hasHadTurn
+		return new SerializablePlayer
+		{
+			kind = Kind,
+			id = _id,
+			color = _color,
+			effectManager = _effects.CreateMemento(),
+			cards = _cardManager.CreateMemento(),
+			actionsPerformed = _actionsPerformed,
+			hasHadTurn = _hasHadTurn,
+			skipNextTurn = _skipNextTurn
         };
     }
 
@@ -205,6 +216,7 @@ public abstract class Player : MonoBehaviour
         _actionsPerformed = memento.actionsPerformed;
         _cardManager.RestoreMemento(memento.cards);
         _hasHadTurn = memento.hasHadTurn;
+		_skipNextTurn = memento.skipNextTurn;
     }
 
     #endregion
@@ -324,7 +336,7 @@ public abstract class Player : MonoBehaviour
         OnActionPerformed?.Invoke(this, new EventArgs());
     }
 
-    public void AssignRandomCard() => Cards.AddCards(CardFactory.GetRandomEffect(CardTier.Tier1));
+	public void AssignRandomCard() => Cards.AddCards(CardFactory.GetRandomEffect(CardTier.Tier1));
 
     #endregion
 
