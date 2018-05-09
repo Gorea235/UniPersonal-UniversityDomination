@@ -15,14 +15,14 @@ public class EffectManagerTest : BaseGameTest
     /// Players default to no stats and are the easiest to access, which is
     /// why we use the first player's stats for this.
     /// </remarks>
-    EffectManager stats => ((Player)statsObj).Stats;
+    EffectManager stats => ((Sector)statsObj).Stats;
 
-    UnityEngine.Object statsObj => Players[0];
+    UnityEngine.Object statsObj => map.Sectors[0];
 
     [SetUp]
     public void EffectManagerTest_SetUp()
     {
-        DefaultPlayerInit();
+        // DefaultPlayerInit();
         game.LoadMapObject();
     }
 
