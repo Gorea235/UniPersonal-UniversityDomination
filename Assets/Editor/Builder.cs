@@ -19,12 +19,13 @@ public static class ProjectBuilder
     static readonly Dictionary<string, string> nameMapping = new Dictionary<string, string>
     {
         {"macOS", "UniversityDomination.app"},
-        {"win32","win32/UniversityDomination32.exe"},
-        {"win64","win64/UniversityDomination64.exe"},
-        {"android","UniversityDomination.apk"},
-        {"linux-universal","linuxUniversal/UniversityDomination"},
-        {"linux32","linux32/UniversityDomination"},
-        {"linux64","linux64/UniversityDomination"}
+        {"win32", "win32/UniversityDomination32.exe"},
+        {"win64", "win64/UniversityDomination64.exe"},
+        {"android"," UniversityDomination.apk"},
+        {"linux-universal", "linuxUniversal/UniversityDomination"},
+        {"linux32", "linux32/UniversityDomination"},
+        {"linux64", "linux64/UniversityDomination"},
+        {"webGL", "webGL"}
     };
 
     public static void BuildProject()
