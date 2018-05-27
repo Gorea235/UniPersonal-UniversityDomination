@@ -24,15 +24,15 @@ namespace EffectImpl
         {
             Players = game.Players.Where(p => p != game.CurrentPlayer && !p.SkipNextTurn)
         };
-        
+
         #endregion
 
         #region Helper Methods
 
         protected override void ApplyToPlayer()
         {
-			AppliedPlayer.SkipNextTurn = true;
-		}
+            AppliedPlayer.SkipNextTurn = true;
+        }
 
         #endregion
     }

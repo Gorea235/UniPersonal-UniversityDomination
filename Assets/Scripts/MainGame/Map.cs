@@ -8,164 +8,164 @@ using UnityEngine;
 /// </summary>
 public class Map : MonoBehaviour
 {
-	#region Unity Bindings
+    #region Unity Bindings
 
-	[SerializeField] Sector[] m_sectors;
-	[SerializeField] GameObject m_blockSectorPrefab;
-	[SerializeField] GameObject m_leafletGuyPrefab;
+    [SerializeField] Sector[] m_sectors;
+    [SerializeField] GameObject m_blockSectorPrefab;
+    [SerializeField] GameObject m_leafletGuyPrefab;
 
-	#endregion
+    #endregion
 
-	#region Private Fields
+    #region Private Fields
 
-	const int MaxPVCAllocateWait = 2; // the number of complete turn cycle to wait
+    const int MaxPVCAllocateWait = 2; // the number of complete turn cycle to wait
 
-	int _pvcAllocateWait = -1;
-	int? _lastPvcSector;
+    int _pvcAllocateWait = -1;
+    int? _lastPvcSector;
 
-	#endregion
+    #endregion
 
-	#region Public Properties
+    #region Public Properties
 
-	/// <summary>
-	/// The sectors on the map.
-	/// </summary>
-	public Sector[] Sectors => m_sectors;
+    /// <summary>
+    /// The sectors on the map.
+    /// </summary>
+    public Sector[] Sectors => m_sectors;
 
-	/// <summary>
-	/// The sectors that contain landmarks.
-	/// </summary>
-	public IEnumerable<Sector> LandmarkedSectors => Sectors.Where(s => s.Landmark != null);
+    /// <summary>
+    /// The sectors that contain landmarks.
+    /// </summary>
+    public IEnumerable<Sector> LandmarkedSectors => Sectors.Where(s => s.Landmark != null);
 
-	/// <summary>
-	/// The sector block prefab.
-	/// </summary>
-	public GameObject BlockSectorPrefab => m_blockSectorPrefab;
+    /// <summary>
+    /// The sector block prefab.
+    /// </summary>
+    public GameObject BlockSectorPrefab => m_blockSectorPrefab;
 
-	/// <summary>
-	/// The leaflet guy prefab.
-	/// </summary>
-	public GameObject LeafletGuyPrefab => m_leafletGuyPrefab;
+    /// <summary>
+    /// The leaflet guy prefab.
+    /// </summary>
+    public GameObject LeafletGuyPrefab => m_leafletGuyPrefab;
 
-	/// <summary>
-	/// The number of player turns the PVC allocation still has to wait until
-	/// it is reallocated.
-	/// </summary>
-	public int PVCAllocateWait => _pvcAllocateWait;
+    /// <summary>
+    /// The number of player turns the PVC allocation still has to wait until
+    /// it is reallocated.
+    /// </summary>
+    public int PVCAllocateWait => _pvcAllocateWait;
 
-	#endregion
+    #endregion
 
-	#region Serialization
+    #region Serialization
 
-	public SerializableMap CreateMemento()
-	{
-		return new SerializableMap
-		{
-			pvcAllocateWait = _pvcAllocateWait,
-			lastPvcSector = _lastPvcSector,
-			// create array of serialized sectors
-			sectors = Sectors.Select(s => s.CreateMemento()).ToArray()
-		};
-	}
+    public SerializableMap CreateMemento()
+    {
+        return new SerializableMap
+        {
+            pvcAllocateWait = _pvcAllocateWait,
+            lastPvcSector = _lastPvcSector,
+            // create array of serialized sectors
+            sectors = Sectors.Select(s => s.CreateMemento()).ToArray()
+        };
+    }
 
-	public void RestoreMemento(SerializableMap memento)
-	{
-		_pvcAllocateWait = memento.pvcAllocateWait;
-		_lastPvcSector = memento.lastPvcSector;
-		for (int i = 0; i < Sectors.Length; i++)
-			Sectors[i].RestoreMemento(memento.sectors[i]);
-	}
+    public void RestoreMemento(SerializableMap memento)
+    {
+        _pvcAllocateWait = memento.pvcAllocateWait;
+        _lastPvcSector = memento.lastPvcSector;
+        for (int i = 0; i < Sectors.Length; i++)
+            Sectors[i].RestoreMemento(memento.sectors[i]);
+    }
 
-	#endregion
+    #endregion
 
-	#region MonoBehaviour
+    #region MonoBehaviour
 
-	void Awake()
-	{
-		// init sectors here so they are ready for usage by Start methods
-		for (int i = 0; i < m_sectors.Length; i++)
-			m_sectors[i].Init(i);
-	}
+    void Awake()
+    {
+        // init sectors here so they are ready for usage by Start methods
+        for (int i = 0; i < m_sectors.Length; i++)
+            m_sectors[i].Init(i);
+    }
 
-	void OnEnable()
-	{
-		Game.Instance.OnPlayerTurnStart += Game_OnPlayerTurnStart;
-	}
+    void OnEnable()
+    {
+        Game.Instance.OnPlayerTurnStart += Game_OnPlayerTurnStart;
+    }
 
-	void OnDisable()
-	{
-		Game.Instance.OnPlayerTurnStart -= Game_OnPlayerTurnStart;
-	}
+    void OnDisable()
+    {
+        Game.Instance.OnPlayerTurnStart -= Game_OnPlayerTurnStart;
+    }
 
-	#endregion
+    #endregion
 
-	#region Handlers
+    #region Handlers
 
-	void Game_OnPlayerTurnStart(object sender, EventArgs e) => ProcessPVCAllocateDec();
+    void Game_OnPlayerTurnStart(object sender, EventArgs e) => ProcessPVCAllocateDec();
 
-	#endregion
+    #endregion
 
-	#region Helper Methods
+    #region Helper Methods
 
-	/// <summary>
-	/// Set the highlight of all given sectors.
-	/// </summary>
-	public void ApplySectorHighlight(bool highlight, params Sector[] sectors)
-	{
-		foreach (Sector sector in sectors)
-			sector.Highlighted = highlight;
-	}
+    /// <summary>
+    /// Set the highlight of all given sectors.
+    /// </summary>
+    public void ApplySectorHighlight(bool highlight, params Sector[] sectors)
+    {
+        foreach (Sector sector in sectors)
+            sector.Highlighted = highlight;
+    }
 
-	/// <summary>
-	/// Processes the PVC allocation decrement. When it reaches 0, the PVC is
-	/// reallocated.
-	/// </summary>
-	void ProcessPVCAllocateDec()
-	{
-		if (_pvcAllocateWait == 0)
-		{
-			AllocatePVC();
-			_pvcAllocateWait--; // make sure we don't re-allocate unnecessarily
-		}
-		else if (_pvcAllocateWait > 0)
-		{
-			_pvcAllocateWait--;
-			Debug.LogFormat("pvc allocation wait now {0}", _pvcAllocateWait);
-		}
-	}
+    /// <summary>
+    /// Processes the PVC allocation decrement. When it reaches 0, the PVC is
+    /// reallocated.
+    /// </summary>
+    void ProcessPVCAllocateDec()
+    {
+        if (_pvcAllocateWait == 0)
+        {
+            AllocatePVC();
+            _pvcAllocateWait--; // make sure we don't re-allocate unnecessarily
+        }
+        else if (_pvcAllocateWait > 0)
+        {
+            _pvcAllocateWait--;
+            Debug.LogFormat("pvc allocation wait now {0}", _pvcAllocateWait);
+        }
+    }
 
-	/// <summary>
-	/// Resets the PVC allocation wait timer.
-	/// The value is reset to the <see cref="MaxPVCAllocateWait"/> number of
-	/// complete turn cycles (w/ adjustment). This means that if it is 1, then all players
-	/// have to complete their turn once, and the player who got found the PVC
-	/// has to complete their turn twice, before it is reallocated. This is to give
-	/// an advantage to the other players.
-	/// </summary>
-	public void ResetPVCAllocateWait()
-	{
-		_lastPvcSector = Sectors.First(s => s.HasPVC).Id;
-		Sectors[_lastPvcSector.Value].Stats.RemoveEffect<EffectImpl.PVCEffect>();
+    /// <summary>
+    /// Resets the PVC allocation wait timer.
+    /// The value is reset to the <see cref="MaxPVCAllocateWait"/> number of
+    /// complete turn cycles (w/ adjustment). This means that if it is 1, then all players
+    /// have to complete their turn once, and the player who got found the PVC
+    /// has to complete their turn twice, before it is reallocated. This is to give
+    /// an advantage to the other players.
+    /// </summary>
+    public void ResetPVCAllocateWait()
+    {
+        _lastPvcSector = Sectors.First(s => s.HasPVC).Id;
+        Sectors[_lastPvcSector.Value].Stats.RemoveEffect<EffectImpl.PVCEffect>();
 #if DEBUG
-		Debug.Log("Previous sector de-allocated");
+        Debug.Log("Previous sector de-allocated");
 #endif
-		_pvcAllocateWait = Game.Instance.Players.Count * MaxPVCAllocateWait;
+        _pvcAllocateWait = Game.Instance.Players.Count * MaxPVCAllocateWait;
 #if DEBUG
-		Debug.LogFormat("pvc allocate wait set to {0}", _pvcAllocateWait);
+        Debug.LogFormat("pvc allocate wait set to {0}", _pvcAllocateWait);
 #endif
-	}
+    }
 
-	/// <summary>
-	/// Randomly allocates the PVC.
-	/// </summary>
-	public void AllocatePVC()
-	{
-		Sector lastPvcSector = _lastPvcSector.HasValue ? Sectors[_lastPvcSector.Value] : null;
-		Sector randomSector = Sectors.Random(s => s.AllowPVC && s != lastPvcSector);
+    /// <summary>
+    /// Randomly allocates the PVC.
+    /// </summary>
+    public void AllocatePVC()
+    {
+        Sector lastPvcSector = _lastPvcSector.HasValue ? Sectors[_lastPvcSector.Value] : null;
+        Sector randomSector = Sectors.Random(s => s.AllowPVC && s != lastPvcSector);
 
-		randomSector.Stats.ApplyEffect(new EffectImpl.PVCEffect());
-		Debug.Log("Allocated PVC at " + randomSector);
-	}
+        randomSector.Stats.ApplyEffect(new EffectImpl.PVCEffect());
+        Debug.Log("Allocated PVC at " + randomSector);
+    }
 
-	#endregion
+    #endregion
 }

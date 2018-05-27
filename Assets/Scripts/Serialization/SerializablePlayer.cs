@@ -10,5 +10,5 @@ public class SerializablePlayer
     public SerializableCardManager cards;
     public int actionsPerformed;
     public bool hasHadTurn;
-	public bool skipNextTurn;
+    public bool skipNextTurn;
 }
